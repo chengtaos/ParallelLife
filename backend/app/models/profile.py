@@ -70,12 +70,21 @@ class LifeProfile:
 
 class ProfileManager:
     @classmethod
+    def _get_user_key(cls) -> str:
+        from ..utils.user_key import get_user_key
+        return get_user_key()
+
+    @classmethod
+    def _get_user_dir(cls) -> str:
+        return os.path.join(Config.PROFILES_DIR, cls._get_user_key())
+
+    @classmethod
     def _ensure_dir(cls):
-        os.makedirs(Config.PROFILES_DIR, exist_ok=True)
+        os.makedirs(cls._get_user_dir(), exist_ok=True)
 
     @classmethod
     def _get_profile_dir(cls, profile_id: str) -> str:
-        return os.path.join(Config.PROFILES_DIR, profile_id)
+        return os.path.join(cls._get_user_dir(), profile_id)
 
     @classmethod
     def _get_meta_path(cls, profile_id: str) -> str:
@@ -117,7 +126,10 @@ class ProfileManager:
     def list_all(cls, limit: int = 50) -> List[LifeProfile]:
         cls._ensure_dir()
         profiles = []
-        for pid in os.listdir(Config.PROFILES_DIR):
+        user_dir = cls._get_user_dir()
+        if not os.path.exists(user_dir):
+            return []
+        for pid in os.listdir(user_dir):
             p = cls.get(pid)
             if p:
                 profiles.append(p)

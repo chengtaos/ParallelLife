@@ -114,11 +114,13 @@ class DecisionManager:
 
     @classmethod
     def _get_decisions_dir(cls, profile_id: str) -> str:
-        return os.path.join(Config.PROFILES_DIR, profile_id, 'decisions')
+        from .profile import ProfileManager
+        return os.path.join(ProfileManager._get_profile_dir(profile_id), 'decisions')
 
     @classmethod
     def _get_branches_dir(cls, profile_id: str) -> str:
-        return os.path.join(Config.PROFILES_DIR, profile_id, 'branches')
+        from .profile import ProfileManager
+        return os.path.join(ProfileManager._get_profile_dir(profile_id), 'branches')
 
     @classmethod
     def _ensure_dirs(cls, profile_id: str):
