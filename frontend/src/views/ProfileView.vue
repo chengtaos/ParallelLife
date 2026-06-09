@@ -62,13 +62,10 @@
             <div v-for="(b, idx) in exploreTarget.branches" :key="idx"
                  class="branch-option" :class="{ selected: selectedBranch === idx, actual: b.is_actual }"
                  @click="selectBranch(idx)">
-              <span>{{ b.label }}</span>
+              <input v-if="!b.is_actual" v-model="b.label"
+                     class="branch-input" @click.stop />
+              <span v-else>{{ b.label }}</span>
               <span v-if="b.is_actual" class="small-tag">{{ $t('decision.actualLabel') }}</span>
-            </div>
-            <div class="branch-option custom" :class="{ selected: selectedBranch === -1 }" @click="selectBranch(-1)">
-              <span v-if="selectedBranch !== -1">✎ 自定义另一个选择...</span>
-              <input v-else v-model="customBranch" placeholder="输入你想要探索的另一种选择..."
-                     class="custom-input" @click.stop ref="customInput" />
             </div>
           </div>
           <div class="depth-selector">
@@ -108,12 +105,10 @@ const decisions = ref([])
 const loading = ref(true)
 
 const exploreTarget = ref(null)
-const selectedBranch = ref(-2)  // -2 = none, -1 = custom, 0+ = pre-defined
+const selectedBranch = ref(-1)
 const selectedDepth = ref('5y')
-const customBranch = ref('')
 const exploring = ref(false)
 const depths = ['1y', '3y', '5y', '10y']
-const customInput = ref(null)
 
 const branches = ref([])
 
@@ -145,24 +140,15 @@ watch(() => route.fullPath, () => {
 
 function openExplore(decision) {
   exploreTarget.value = decision
-  selectedBranch.value = -2
-  customBranch.value = ''
+  selectedBranch.value = -1
   selectedDepth.value = '5y'
 }
 
-function selectBranch(idx) {
-  selectedBranch.value = idx
-  if (idx === -1) { setTimeout(() => customInput.value?.focus(), 100) }
-}
-
 async function startExplore() {
-  if (selectedBranch.value < 0 && selectedBranch.value !== -1) return
-  if (selectedBranch.value === -1 && !customBranch.value.trim()) return
+  if (selectedBranch.value < 0) return
   exploring.value = true
   try {
-    const branchLabel = selectedBranch.value === -1
-      ? customBranch.value.trim()
-      : exploreTarget.value.branches[selectedBranch.value].label
+    const branchLabel = exploreTarget.value.branches[selectedBranch.value].label
     const res = await decisionApi.explore(props.profileId, exploreTarget.value.decision_id, branchLabel, selectedDepth.value)
     const taskId = res.data.task_id
     const branchId = res.data.branch_id
@@ -232,11 +218,9 @@ async function confirmDelete() {
 .branch-options { margin-bottom: 20px; }
 .branch-option { padding: 12px; border: 1px solid #eee; margin-bottom: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 14px; transition: border-color 0.2s; }
 .branch-option.selected { border-color: #000; background: #fafafa; }
-.branch-option.custom { color: #999; font-style: italic; cursor: pointer; }
-.branch-option.custom.selected { color: #000; font-style: normal; cursor: default; background: #fff; }
 .branch-option.actual { font-weight: 600; }
-.custom-input { width: 100%; border: none; outline: none; font-size: 14px; font-family: 'JetBrains Mono', 'Noto Sans SC', monospace; background: transparent; }
-.custom-input::placeholder { color: #ccc; }
+.branch-input { width: 100%; border: none; border-bottom: 1px dashed #ccc; outline: none; font-size: 14px; font-family: 'JetBrains Mono', 'Noto Sans SC', monospace; background: transparent; padding: 2px 0; }
+.branch-input:focus { border-bottom-color: #000; }
 .small-tag { font-size: 10px; background: #000; color: #fff; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; }
 .depth-selector { margin-bottom: 24px; }
 .depth-selector label { display: block; font-size: 12px; color: #999; margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; }
