@@ -157,6 +157,36 @@ def delete_profile(profile_id: str):
     return jsonify({"success": True, "message": f"画像已删除: {profile_id}"})
 
 
+@profile_bp.route('/<profile_id>/pattern', methods=['GET'])
+def get_decision_pattern(profile_id: str):
+    """分析决策模式（同步，单次 LLM 调用）"""
+    try:
+        profile = ProfileManager.get(profile_id)
+        if not profile:
+            return jsonify({"success": False, "error": f"画像不存在: {profile_id}"}), 404
+
+        from ..models.decision import DecisionManager
+        decisions = DecisionManager.list_decisions(profile_id)
+        branches = DecisionManager.list_branches(profile_id)
+        completed = [b.to_dict() for b in branches if b.status.value == 'completed']
+
+        if not decisions and not completed:
+            return jsonify({"success": False, "error": "暂无足够的决策和推演数据"}), 400
+
+        from ..services.pattern_analyzer import PatternAnalyzer
+        analyzer = PatternAnalyzer()
+        result = analyzer.analyze(
+            actual_decisions=[d.to_dict() for d in decisions],
+            explored_branches=completed
+        )
+
+        return jsonify({"success": True, "data": result})
+
+    except Exception as e:
+        logger.error(f"模式分析失败: {str(e)}")
+        return jsonify({"success": False, "error": str(e), "traceback": traceback.format_exc()}), 500
+
+
 @profile_bp.route('/task/<task_id>/status', methods=['GET'])
 def get_task_status(task_id: str):
     """查询任务状态"""

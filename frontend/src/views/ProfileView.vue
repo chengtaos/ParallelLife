@@ -56,6 +56,49 @@
         <DecisionCard v-for="d in decisions" :key="d.decision_id" :decision="d" @explore="openExplore(d)" />
       </section>
 
+      <!-- 决策模式分析 -->
+      <section v-if="decisions.length > 0 || branches.length > 0" class="pattern-section">
+        <div class="section-title-row">
+          <h2>决策模式</h2>
+          <button v-if="!pattern && !patternLoading" class="pattern-btn" @click="loadPattern">分析 →</button>
+          <span v-if="patternLoading" class="loading-tag">分析中...</span>
+        </div>
+
+        <div v-if="pattern" class="pattern-result">
+          <div class="pattern-card primary">
+            <div class="pattern-label">决策风格</div>
+            <div class="pattern-value large">{{ pattern.decision_style }}</div>
+          </div>
+
+          <div class="pattern-grid">
+            <div class="pattern-card">
+              <div class="pattern-label">风险偏好</div>
+              <div class="pattern-value">{{ pattern.risk_preference?.level }}</div>
+              <p class="pattern-detail">{{ pattern.risk_preference?.analysis }}</p>
+            </div>
+            <div class="pattern-card">
+              <div class="pattern-label">核心价值观</div>
+              <div class="pattern-value">{{ pattern.value_orientation?.primary }}</div>
+              <p class="pattern-detail">{{ pattern.value_orientation?.analysis }}</p>
+            </div>
+          </div>
+
+          <div v-if="pattern.patterns?.length" class="pattern-list">
+            <div v-for="(p, i) in pattern.patterns" :key="i" class="pattern-item">
+              <span class="p-num">{{ i + 1 }}</span>
+              <div>
+                <span class="p-name">{{ p.pattern }}</span>
+                <p class="p-evidence">{{ p.evidence }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="pattern-insight">
+            <p>{{ pattern.insight }}</p>
+          </div>
+        </div>
+      </section>
+
       <div v-if="exploreTarget" class="overlay" @mousedown.self="exploreTarget = null">
         <div class="explore-modal">
           <h2>{{ $t('decision.exploreTitle') }}</h2>
@@ -112,6 +155,20 @@ const exploring = ref(false)
 const depths = ['1y', '3y', '5y', '10y']
 
 const branches = ref([])
+const pattern = ref(null)
+const patternLoading = ref(false)
+
+async function loadPattern() {
+  patternLoading.value = true
+  try {
+    const res = await profileApi.getPattern(props.profileId)
+    pattern.value = res.data
+  } catch (e) {
+    console.error('模式分析失败:', e)
+  } finally {
+    patternLoading.value = false
+  }
+}
 
 async function loadProfile() {
   loading.value = true
@@ -237,4 +294,29 @@ async function confirmDelete() {
 .spinner { width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .empty { color: #999; padding: 24px 0; }
+
+.pattern-section { margin-top: 40px; padding-top: 32px; border-top: 1px solid #eee; }
+.pattern-btn { background: none; border: 1px solid #000; padding: 4px 12px; font-size: 12px; font-family: 'JetBrains Mono', monospace; cursor: pointer; transition: all 0.2s; }
+.pattern-btn:hover { background: #000; color: #fff; }
+.loading-tag { font-size: 12px; color: #999; font-family: 'JetBrains Mono', monospace; }
+
+.pattern-result { margin-top: 20px; }
+.pattern-card { padding: 16px; border: 1px solid #f5f5f5; margin-bottom: 12px; }
+.pattern-card.primary { background: #000; color: #fff; border-color: #000; }
+.pattern-card.primary .pattern-label { color: rgba(255,255,255,0.6); }
+.pattern-card.primary .pattern-value { color: #fff; }
+.pattern-label { font-size: 11px; color: #999; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
+.pattern-value { font-size: 16px; font-weight: 600; }
+.pattern-value.large { font-size: 22px; font-family: 'Space Grotesk', sans-serif; }
+.pattern-detail { font-size: 13px; color: #666; line-height: 1.6; margin-top: 8px; }
+.pattern-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.pattern-list { margin-bottom: 20px; }
+.pattern-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f5f5f5; }
+.p-num { font-size: 12px; font-weight: 700; color: #999; font-family: 'JetBrains Mono', monospace; flex-shrink: 0; }
+.p-name { font-size: 14px; font-weight: 500; }
+.p-evidence { font-size: 12px; color: #999; margin-top: 4px; }
+
+.pattern-insight { background: #fafafa; padding: 20px; border: 1px solid #eee; }
+.pattern-insight p { font-size: 14px; line-height: 1.8; color: #333; }
 </style>

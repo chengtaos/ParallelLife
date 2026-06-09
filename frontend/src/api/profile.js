@@ -15,5 +15,8 @@ export const profileApi = {
   },
   getTaskStatus(taskId) {
     return service.get(`/api/profile/task/${taskId}/status`)
+  },
+  getPattern(profileId) {
+    return service.get(`/api/profile/${profileId}/pattern`)
   }
 }
