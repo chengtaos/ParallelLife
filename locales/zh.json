@@ -1,0 +1,85 @@
+{
+  "nav": {
+    "brand": "PARALLEL LIFE",
+    "visitGithub": "GitHub"
+  },
+  "home": {
+    "tagline": "平行人生模拟器",
+    "version": "v0.1.0 MVP",
+    "heroTitle1": "如果当初选了",
+    "heroTitle2": "另一条路",
+    "heroDesc": "输入你的人生经历，AI 解析你的关键决策点，推演不同选择下的平行人生。每个选择都值得被看见。",
+    "slogan": "探索你的无限可能",
+    "startBtn": "创建人生画像",
+    "systemStatus": "系统状态",
+    "systemReady": "就绪",
+    "systemReadyDesc": "AI 推理引擎已就绪，输入你的故事即可开始。",
+    "recentProfiles": "最近画像",
+    "noProfiles": "还没有画像，点击上方按钮创建第一个",
+    "loading": "加载中..."
+  },
+  "profile": {
+    "title": "人生画像",
+    "createTitle": "创建新画像",
+    "nameLabel": "画像名称",
+    "namePlaceholder": "例如：张三的人生",
+    "textLabel": "人生描述",
+    "textPlaceholder": "描述你的人生经历...\n\n例如：\n我出生在湖南一个小城，高中毕业后考上了武汉的大学。大学期间认识了现在的妻子。毕业后有两份工作offer，一份在北京，一份留在武汉...",
+    "textHint": "请尽可能详细地描述你的教育、职业、重大决策、关键人物。越详细，AI 推理越准确。",
+    "submitBtn": "开始解析",
+    "creating": "正在解析中...",
+    "basicInfo": "基本信息",
+    "decisions": "决策时间线",
+    "graphStatus": "图谱状态",
+    "noDecisions": "暂无识别到的决策点",
+    "actualChoice": "实际选择",
+    "exploreBtn": "探索另一条路",
+    "backBtn": "返回首页",
+    "deleteBtn": "删除画像"
+  },
+  "decision": {
+    "title": "决策详情",
+    "scenario": "决策场景",
+    "options": "可选路径",
+    "actualLabel": "实际选择",
+    "exploreTitle": "探索平行人生",
+    "selectBranch": "选择要探索的分支",
+    "depthLabel": "推演深度",
+    "depth1y": "1年",
+    "depth3y": "3年",
+    "depth5y": "5年",
+    "depth10y": "10年",
+    "startExplore": "开始推演",
+    "exploring": "推演中...",
+    "backToProfile": "返回画像"
+  },
+  "branch": {
+    "title": "推演结果",
+    "branchLabel": "选择的路径",
+    "narrative": "人生叙事",
+    "causalChain": "因果链",
+    "dimensions": "七维评分",
+    "baseline": "决策时状态",
+    "timePoint": "{time}后",
+    "dimension": {
+      "career_achievement": "职业成就",
+      "wealth": "财富水平",
+      "social_density": "人际关系",
+      "happiness": "幸福感",
+      "location_stability": "地理稳定",
+      "health": "健康状态",
+      "self_fulfillment": "自我实现"
+    },
+    "stepLabel": "第{step}步",
+    "timeOffset": "{offset}",
+    "affectedDims": "影响维度",
+    "loading": "推演进行中，请稍候..."
+  },
+  "common": {
+    "loading": "加载中...",
+    "error": "出错了",
+    "retry": "重试",
+    "cancel": "取消",
+    "confirm": "确认"
+  }
+}

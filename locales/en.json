@@ -1,0 +1,85 @@
+{
+  "nav": {
+    "brand": "PARALLEL LIFE",
+    "visitGithub": "GitHub"
+  },
+  "home": {
+    "tagline": "Parallel Life Simulator",
+    "version": "v0.1.0 MVP",
+    "heroTitle1": "What if you",
+    "heroTitle2": "chose differently",
+    "heroDesc": "Share your life story. AI extracts your key decisions and simulates parallel lives for each path not taken. Every choice deserves to be seen.",
+    "slogan": "Explore your infinite possibilities",
+    "startBtn": "Create Life Profile",
+    "systemStatus": "System Status",
+    "systemReady": "Ready",
+    "systemReadyDesc": "AI inference engine is ready. Tell your story to begin.",
+    "recentProfiles": "Recent Profiles",
+    "noProfiles": "No profiles yet. Click the button above to create your first.",
+    "loading": "Loading..."
+  },
+  "profile": {
+    "title": "Life Profile",
+    "createTitle": "Create New Profile",
+    "nameLabel": "Profile Name",
+    "namePlaceholder": "e.g., John's Life",
+    "textLabel": "Life Description",
+    "textPlaceholder": "Describe your life journey...\n\nExample:\nI was born in a small town, went to college in Boston, met my spouse there. After graduation I had two job offers...",
+    "textHint": "Describe your education, career, major decisions, and key people in as much detail as possible for the best AI inference.",
+    "submitBtn": "Start Analysis",
+    "creating": "Analyzing...",
+    "basicInfo": "Basic Info",
+    "decisions": "Decision Timeline",
+    "graphStatus": "Graph Status",
+    "noDecisions": "No decisions identified yet",
+    "actualChoice": "Actual Choice",
+    "exploreBtn": "Explore Alternate Path",
+    "backBtn": "Back to Home",
+    "deleteBtn": "Delete Profile"
+  },
+  "decision": {
+    "title": "Decision Details",
+    "scenario": "Scenario",
+    "options": "Options",
+    "actualLabel": "Actual Choice",
+    "exploreTitle": "Explore Parallel Life",
+    "selectBranch": "Select a path to explore",
+    "depthLabel": "Exploration Depth",
+    "depth1y": "1 Year",
+    "depth3y": "3 Years",
+    "depth5y": "5 Years",
+    "depth10y": "10 Years",
+    "startExplore": "Start Simulation",
+    "exploring": "Simulating...",
+    "backToProfile": "Back to Profile"
+  },
+  "branch": {
+    "title": "Simulation Result",
+    "branchLabel": "Path Taken",
+    "narrative": "Life Narrative",
+    "causalChain": "Causal Chain",
+    "dimensions": "Dimensional Scores",
+    "baseline": "At Decision Point",
+    "timePoint": "After {time}",
+    "dimension": {
+      "career_achievement": "Career",
+      "wealth": "Wealth",
+      "social_density": "Relationships",
+      "happiness": "Happiness",
+      "location_stability": "Stability",
+      "health": "Health",
+      "self_fulfillment": "Fulfillment"
+    },
+    "stepLabel": "Step {step}",
+    "timeOffset": "{offset}",
+    "affectedDims": "Affected Dimensions",
+    "loading": "Simulation in progress, please wait..."
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  }
+}
