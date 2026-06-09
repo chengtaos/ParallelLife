@@ -1,8 +1,8 @@
-"""决策相关API — 列出决策、推演分支、获取结果"""
+"""决策相关API — 列出决策、推演分支、获取结果、导出报告"""
 
 import traceback
 import threading
-from flask import request, jsonify
+from flask import request, jsonify, Response
 from . import decision_bp
 from ..models.profile import ProfileManager
 from ..models.decision import DecisionManager, BranchTimeline, BranchStatus
@@ -170,3 +170,79 @@ def list_branches(profile_id: str):
         "data": [b.to_dict() for b in branches],
         "count": len(branches)
     })
+
+
+@decision_bp.route('/branch/<profile_id>/<branch_id>/export', methods=['GET'])
+def export_branch_report(profile_id: str, branch_id: str):
+    """导出分支推演结果为 Markdown 文件"""
+    branch = DecisionManager.get_branch(profile_id, branch_id)
+    if not branch:
+        return jsonify({"success": False, "error": f"分支不存在: {branch_id}"}), 404
+    if branch.status.value != 'completed':
+        return jsonify({"success": False, "error": "分支尚未推演完成"}), 400
+
+    b = branch.to_dict()
+
+    dim_labels = {
+        "career_achievement": "职业成就", "wealth": "财富水平",
+        "social_density": "人际关系", "happiness": "幸福感",
+        "location_stability": "地理稳定", "health": "健康状态",
+        "self_fulfillment": "自我实现"
+    }
+
+    md = f"""# 平行人生推演报告
+
+## 选择的路径
+**{b['branch_label']}**
+
+> 推演深度: {b['depth']} | 生成时间: {b.get('completed_at', b['created_at'])}
+
+---
+
+## 人生叙事
+
+{b['narrative']}
+
+---
+
+## 因果链
+
+"""
+    for step in b.get('causal_chain', []):
+        md += f"### 第{step['step_no']}步：{step.get('time_offset', '')}\n"
+        md += f"- **事件**: {step['event']}\n"
+        md += f"- **结果**: {step['consequence']}\n"
+        dims = step.get('affected_dimensions', [])
+        if dims:
+            md += f"- **影响维度**: {', '.join(dim_labels.get(d, d) for d in dims)}\n"
+        md += "\n"
+
+    md += "---\n\n## 七维评分\n\n"
+    traj = b.get('dimensional_trajectory', {})
+
+    md += "| 维度 |"
+    md += "".join(f" {tp} |" for tp in traj.keys())
+    md += "\n|------|" + "".join("------|" for _ in traj) + "\n"
+
+    all_dims = list(dim_labels.keys())
+    for dim in all_dims:
+        md += f"| {dim_labels[dim]} |"
+        for tp in traj.keys():
+            score = traj[tp].get(dim, {}).get('score', '-')
+            md += f" {score} |"
+        md += "\n"
+
+    md += "\n### 评分理由\n\n"
+    last_tp = list(traj.keys())[-1] if traj else None
+    if last_tp:
+        for dim in all_dims:
+            item = traj[last_tp].get(dim, {})
+            md += f"- **{dim_labels[dim]}** ({item.get('score', '-')}分): {item.get('reasoning', '')}\n"
+
+    md += "\n---\n\n*本报告由 Parallel Life AI 推演引擎自动生成*\n"
+
+    return Response(
+        md,
+        mimetype="text/markdown",
+        headers={"Content-Disposition": f"attachment; filename={branch_id}_report.md"}
+    )

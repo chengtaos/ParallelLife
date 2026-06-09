@@ -24,6 +24,9 @@
     <div v-else-if="branch" class="content">
       <div class="back-row">
         <button class="back-btn" @click="router.push(`/profile/${profileId}`)">← {{ $t('decision.backToProfile') }}</button>
+        <a v-if="branch.status === 'completed'"
+           :href="`/api/decision/branch/${profileId}/${branchId}/export`"
+           class="export-btn" download>⬇ 导出报告</a>
       </div>
 
       <h1 class="branch-title">{{ $t('branch.title') }}</h1>
@@ -176,8 +179,10 @@ watch(() => props.branchId, () => {
 .gen-hint { font-size: 12px; color: #999; font-family: 'JetBrains Mono', monospace; }
 
 .content { padding: 32px 0 80px; }
-.back-row { margin-bottom: 24px; }
+.back-row { margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
 .back-btn { background: none; border: none; font-size: 13px; color: #999; font-family: 'JetBrains Mono', monospace; cursor: pointer; }
+.export-btn { font-size: 12px; color: #000; text-decoration: none; border: 1px solid #000; padding: 6px 14px; font-family: 'JetBrains Mono', monospace; transition: all 0.2s; }
+.export-btn:hover { background: #000; color: #fff; }
 .branch-title { font-family: 'Space Grotesk', 'Noto Sans SC', sans-serif; font-size: 32px; font-weight: 300; margin-bottom: 12px; }
 .branch-meta { display: flex; gap: 12px; margin-bottom: 32px; }
 .meta-tag { font-size: 11px; background: #000; color: #fff; padding: 3px 10px; font-family: 'JetBrains Mono', monospace; }
