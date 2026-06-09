@@ -39,17 +39,21 @@ def create_profile():
         def run_extract():
             set_locale(current_locale)
             try:
-                task_manager.update_task(task_id, status=TaskStatus.PROCESSING, progress=10,
-                                         message="正在解析人生经历...")
+                task_manager.update_task(task_id, status=TaskStatus.PROCESSING, progress=5,
+                                         message="正在调用 AI 解析人生经历...")
 
                 extractor = ProfileExtractor()
                 result = extractor.extract(text)
 
-                task_manager.update_task(task_id, progress=40, message="解析完成，正在构建知识图谱...")
+                task_manager.update_task(task_id, progress=30, message="AI 解析完成，识别到 "
+                                         f"{len(result.get('entities', []))} 个关键人物，"
+                                         f"{len(result.get('decisions', []))} 个决策点")
 
                 profile.basic_info = result.get('basic_info', {})
                 profile.status = ProfileStatus.CREATED
                 ProfileManager.save(profile)
+
+                task_manager.update_task(task_id, progress=40, message="正在创建知识图谱...")
 
                 builder = GraphBuilderService(api_key=Config.ZEP_API_KEY)
                 graph_id = builder.build_profile_graph(
@@ -65,7 +69,7 @@ def create_profile():
                 profile.status = ProfileStatus.GRAPH_BUILT
                 ProfileManager.save(profile)
 
-                task_manager.update_task(task_id, progress=70, message="正在保存决策节点...")
+                task_manager.update_task(task_id, progress=65, message="图谱创建成功，正在整理决策节点...")
 
                 from ..models.decision import DecisionManager, DecisionNode
                 decisions = result.get('decisions', [])

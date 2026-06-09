@@ -42,7 +42,11 @@
             <span v-if="creating" class="spinner"></span>
             {{ creating ? $t('profile.creating') : $t('profile.submitBtn') }}
           </button>
-          <button class="cancel-btn" @click="showCreate = false">{{ $t('common.cancel') }}</button>
+          <div v-if="creating" class="progress-section">
+            <div class="progress-bar"><div class="progress-fill" :style="{ width: createProgress + '%' }"></div></div>
+            <p class="progress-msg">{{ createMessage }}</p>
+          </div>
+          <button class="cancel-btn" @click="showCreate = false" v-if="!creating">{{ $t('common.cancel') }}</button>
         </div>
       </section>
 
@@ -83,6 +87,8 @@ const router = useRouter()
 const profiles = ref([])
 const showCreate = ref(false)
 const creating = ref(false)
+const createProgress = ref(0)
+const createMessage = ref('')
 const profileName = ref('')
 const profileText = ref('')
 
@@ -98,20 +104,30 @@ onMounted(async () => {
 async function createProfile() {
   if (!profileText.value.trim()) return
   creating.value = true
+  createProgress.value = 0
+  createMessage.value = '正在提交...'
   try {
     const res = await profileApi.create(profileText.value, profileName.value || 'Unnamed')
     const taskId = res.data.task_id
     const poll = setInterval(async () => {
-      const statusRes = await profileApi.getTaskStatus(taskId)
-      if (statusRes.data.status === 'completed') {
-        clearInterval(poll)
-        router.push(`/profile/${statusRes.data.result.profile_id}`)
-      } else if (statusRes.data.status === 'failed') {
-        clearInterval(poll)
-        creating.value = false
-        alert('创建失败: ' + (statusRes.data.error || '未知错误'))
+      try {
+        const statusRes = await profileApi.getTaskStatus(taskId)
+        const task = statusRes.data
+        createProgress.value = task.progress || 0
+        createMessage.value = task.message || ''
+        if (task.status === 'completed') {
+          clearInterval(poll)
+          createProgress.value = 100
+          setTimeout(() => router.push(`/profile/${task.result.profile_id}`), 400)
+        } else if (task.status === 'failed') {
+          clearInterval(poll)
+          creating.value = false
+          alert('创建失败: ' + (task.error || '未知错误'))
+        }
+      } catch (e) {
+        // 继续轮询
       }
-    }, 2000)
+    }, 1500)
   } catch (e) {
     creating.value = false
     alert('创建失败: ' + e.message)
@@ -151,6 +167,10 @@ async function createProfile() {
 .cancel-btn { padding: 12px 28px; background: none; border: 1px solid #000; font-size: 14px; font-family: 'Space Grotesk', sans-serif; }
 .spinner { width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
 @keyframes spin { to { transform: rotate(360deg); } }
+.progress-section { margin-top: 16px; }
+.progress-bar { height: 3px; background: #eee; margin-bottom: 8px; }
+.progress-fill { height: 100%; background: #000; transition: width 0.5s ease; }
+.progress-msg { font-size: 12px; color: #666; font-family: 'JetBrains Mono', monospace; }
 
 .profiles-section { padding: 40px 0 80px; border-top: 1px solid #eee; }
 .section-header { font-size: 13px; color: #999; font-family: 'JetBrains Mono', monospace; margin-bottom: 12px; }

@@ -46,7 +46,10 @@
       </section>
 
       <section class="decisions-section">
-        <h2>{{ $t('profile.decisions') }}</h2>
+        <div class="section-title-row">
+          <h2>{{ $t('profile.decisions') }}</h2>
+          <span v-if="branches.length" class="branch-count">{{ branches.filter(b => b.status === 'completed').length }} 次推演</span>
+        </div>
         <div v-if="decisions.length === 0" class="empty">{{ $t('profile.noDecisions') }}</div>
         <DecisionCard v-for="d in decisions" :key="d.decision_id" :decision="d" @explore="openExplore(d)" />
       </section>
@@ -85,8 +88,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import DecisionCard from '../components/DecisionCard.vue'
 import { profileApi } from '../api/profile'
@@ -105,19 +108,32 @@ const selectedDepth = ref('5y')
 const exploring = ref(false)
 const depths = ['1y', '3y', '5y', '10y']
 
-onMounted(async () => {
+const branches = ref([])
+
+async function loadProfile() {
+  loading.value = true
   try {
-    const [pRes, dRes] = await Promise.all([
+    const [pRes, dRes, bRes] = await Promise.all([
       profileApi.get(props.profileId),
-      decisionApi.list(props.profileId)
+      decisionApi.list(props.profileId),
+      decisionApi.listBranches(props.profileId)
     ])
     profile.value = pRes.data
     decisions.value = dRes.data || []
+    branches.value = bRes.data || []
   } catch (e) {
     console.error('加载画像失败:', e)
   } finally {
     loading.value = false
   }
+}
+
+onMounted(loadProfile)
+
+// 从推演页返回时自动刷新
+const route = useRoute()
+watch(() => route.fullPath, () => {
+  if (route.name === 'Profile') loadProfile()
 })
 
 function openExplore(decision) {
@@ -189,7 +205,9 @@ async function confirmDelete() {
 .info-list { margin-bottom: 16px; }
 .info-list h3 { font-size: 12px; color: #999; text-transform: uppercase; margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; }
 .list-item { font-size: 14px; padding: 6px 0; border-bottom: 1px solid #f5f5f5; }
-.decisions-section h2 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; margin-bottom: 20px; }
+.decisions-section h2 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; }
+.section-title-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 20px; }
+.branch-count { font-size: 12px; color: #999; font-family: 'JetBrains Mono', monospace; }
 
 .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; z-index: 100; }
 .explore-modal { background: #fff; border: 1px solid #000; padding: 40px; max-width: 560px; width: 90%; max-height: 80vh; overflow-y: auto; }
