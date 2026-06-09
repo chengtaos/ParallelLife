@@ -2,10 +2,17 @@ import axios from 'axios'
 import i18n from '../i18n'
 
 // 用户身份：首次访问生成随机 key，存入 localStorage 持久化
+function randomId() {
+  return 'xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0
+    return (c === 'x' ? r : r & 3 | 8).toString(16)
+  })
+}
+
 function getUserKey() {
   let key = localStorage.getItem('user_key')
   if (!key) {
-    key = 'uk_' + crypto.randomUUID().replace(/-/g, '').slice(0, 20)
+    key = 'uk_' + randomId().slice(0, 20)
     localStorage.setItem('user_key', key)
   }
   return key
