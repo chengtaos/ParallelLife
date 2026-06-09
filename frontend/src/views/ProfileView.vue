@@ -49,6 +49,8 @@
         <div class="section-title-row">
           <h2>{{ $t('profile.decisions') }}</h2>
           <span v-if="branches.length" class="branch-count">{{ branches.filter(b => b.status === 'completed').length }} 次推演</span>
+          <button v-if="branches.filter(b => b.status === 'completed').length >= 2"
+                  class="compare-link" @click="router.push(`/compare/${profileId}`)">对比分支 →</button>
         </div>
         <div v-if="decisions.length === 0" class="empty">{{ $t('profile.noDecisions') }}</div>
         <DecisionCard v-for="d in decisions" :key="d.decision_id" :decision="d" @explore="openExplore(d)" />
@@ -209,6 +211,8 @@ async function confirmDelete() {
 .decisions-section h2 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; }
 .section-title-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 20px; }
 .branch-count { font-size: 12px; color: #999; font-family: 'JetBrains Mono', monospace; }
+.compare-link { background: none; border: 1px solid #000; padding: 4px 12px; font-size: 12px; font-family: 'JetBrains Mono', monospace; cursor: pointer; transition: all 0.2s; margin-left: auto; }
+.compare-link:hover { background: #000; color: #fff; }
 
 .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; z-index: 100; }
 .explore-modal { background: #fff; border: 1px solid #000; padding: 40px; max-width: 560px; width: 90%; max-height: 80vh; overflow-y: auto; }

@@ -37,8 +37,10 @@ def create_app(config_class=Config):
         return response
 
     from .api import profile_bp, decision_bp
+    from .api.compare import compare_bp
     app.register_blueprint(profile_bp, url_prefix='/api/profile')
     app.register_blueprint(decision_bp, url_prefix='/api/decision')
+    app.register_blueprint(compare_bp, url_prefix='/api/compare')
 
     @app.route('/health')
     def health():
