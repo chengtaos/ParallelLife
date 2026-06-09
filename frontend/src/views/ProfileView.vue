@@ -9,6 +9,7 @@
     <div v-else-if="profile" class="content">
       <div class="back-row">
         <button class="back-btn" @click="router.push('/')">← {{ $t('profile.backBtn') }}</button>
+        <button class="delete-btn" @click="confirmDelete">{{ $t('profile.deleteBtn') }}</button>
       </div>
 
       <h1 class="profile-name">{{ profile.name }}</h1>
@@ -149,6 +150,16 @@ async function startExplore() {
     alert('推演失败: ' + e.message)
   }
 }
+
+async function confirmDelete() {
+  if (!confirm('确定要删除这个画像吗？所有关联的决策和推演结果将被永久删除。')) return
+  try {
+    await profileApi.delete(props.profileId)
+    router.push('/')
+  } catch (e) {
+    alert('删除失败: ' + e.message)
+  }
+}
 </script>
 
 <style scoped>
@@ -157,8 +168,10 @@ async function startExplore() {
 .brand { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: 2px; cursor: pointer; }
 .loading-state { padding: 80px 0; text-align: center; color: #999; }
 .content { padding: 32px 0 80px; }
-.back-row { margin-bottom: 24px; }
+.back-row { margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
 .back-btn { background: none; border: none; font-size: 13px; color: #999; font-family: 'JetBrains Mono', monospace; cursor: pointer; }
+.delete-btn { background: none; border: 1px solid #ff0000; color: #ff0000; padding: 6px 14px; font-size: 12px; font-family: 'JetBrains Mono', monospace; cursor: pointer; transition: all 0.2s; }
+.delete-btn:hover { background: #ff0000; color: #fff; }
 .profile-name { font-family: 'Space Grotesk', 'Noto Sans SC', sans-serif; font-size: 36px; font-weight: 300; margin-bottom: 12px; }
 .status-row { display: flex; gap: 12px; align-items: center; margin-bottom: 32px; }
 .status-badge { font-size: 11px; padding: 3px 10px; font-family: 'JetBrains Mono', monospace; }
