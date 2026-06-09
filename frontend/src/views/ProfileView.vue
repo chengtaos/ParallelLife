@@ -49,6 +49,7 @@
         <div class="section-title-row">
           <h2>{{ $t('profile.decisions') }}</h2>
           <span v-if="branches.length" class="branch-count">{{ branches.filter(b => b.status === 'completed').length }} 次推演</span>
+          <span v-if="activeTaskCount > 0" class="active-task-indicator">● {{ activeTaskCount }} 项进行中</span>
           <button v-if="branches.filter(b => b.status === 'completed').length >= 2"
                   class="compare-link" @click="router.push(`/compare/${profileId}`)">对比分支 →</button>
         </div>
@@ -134,13 +135,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import DecisionCard from '../components/DecisionCard.vue'
 import { profileApi } from '../api/profile'
 import { decisionApi } from '../api/decision'
 import { toast } from '../toast'
+import { addTask, updateTask, removeTask, getActiveTaskCount } from '../store/tasks'
 
 const props = defineProps({ profileId: String })
 const router = useRouter()
@@ -158,6 +160,7 @@ const depths = ['1y', '3y', '5y', '10y']
 const branches = ref([])
 const pattern = ref(null)
 const patternLoading = ref(false)
+const activeTaskCount = computed(() => getActiveTaskCount(props.profileId))
 
 async function loadPattern() {
   patternLoading.value = true
@@ -211,24 +214,33 @@ async function startExplore() {
     const res = await decisionApi.explore(props.profileId, exploreTarget.value.decision_id, branchLabel, selectedDepth.value)
     const taskId = res.data.task_id
     const branchId = res.data.branch_id
+    addTask({ id: taskId, type: '推演分支', profileId: props.profileId, progress: 0, message: '正在启动...' })
     const startedAt = Date.now()
     const poll = setInterval(async () => {
       if (Date.now() - startedAt > 180000) {
         clearInterval(poll)
         exploring.value = false
+        removeTask(taskId)
         toast('推演超时，请重试', 'error')
         return
       }
+      try { await pollStatus() } catch (e) { /* continue */ }
+    }, 2000)
+
+    async function pollStatus() {
       const statusRes = await decisionApi.getTaskStatus(taskId)
+      updateTask(taskId, { progress: statusRes.data.progress || 0, message: statusRes.data.message || '' })
       if (statusRes.data.status === 'completed') {
         clearInterval(poll)
+        removeTask(taskId)
         router.push(`/branch/${props.profileId}/${branchId}`)
       } else if (statusRes.data.status === 'failed') {
         clearInterval(poll)
         exploring.value = false
+        removeTask(taskId)
         toast('推演失败: ' + (statusRes.data.error || '未知错误'), 'error')
       }
-    }, 2000)
+    }
   } catch (e) {
     exploring.value = false
     toast('推演失败: ' + e.message, 'error')
@@ -276,6 +288,8 @@ async function confirmDelete() {
 .decisions-section h2 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; }
 .section-title-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 20px; }
 .branch-count { font-size: 12px; color: #999; font-family: 'JetBrains Mono', monospace; }
+.active-task-indicator { font-size: 11px; color: #000; font-family: 'JetBrains Mono', monospace; animation: pulse 1.5s ease-in-out infinite; cursor: default; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 .compare-link { background: none; border: 1px solid #000; padding: 4px 12px; font-size: 12px; font-family: 'JetBrains Mono', monospace; cursor: pointer; transition: all 0.2s; margin-left: auto; }
 .compare-link:hover { background: #000; color: #fff; }
 

@@ -84,6 +84,7 @@ import { useRouter } from 'vue-router'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import { profileApi } from '../api/profile'
 import { toast } from '../toast'
+import { addTask, updateTask, removeTask } from '../store/tasks'
 
 const router = useRouter()
 const profiles = ref([])
@@ -111,11 +112,14 @@ async function createProfile() {
   try {
     const res = await profileApi.create(profileText.value, profileName.value || 'Unnamed')
     const taskId = res.data.task_id
+    const profileId = res.data.profile_id
+    addTask({ id: taskId, type: '创建画像', profileId, progress: 0, message: '正在提交...' })
     const startedAt = Date.now()
     const poll = setInterval(async () => {
       if (Date.now() - startedAt > 120000) {
         clearInterval(poll)
         creating.value = false
+        removeTask(taskId)
         toast('创建超时，请检查网络后重试', 'error')
         return
       }
@@ -124,13 +128,16 @@ async function createProfile() {
         const task = statusRes.data
         createProgress.value = task.progress || 0
         createMessage.value = task.message || ''
+        updateTask(taskId, { progress: task.progress || 0, message: task.message || '' })
         if (task.status === 'completed') {
           clearInterval(poll)
           createProgress.value = 100
+          removeTask(taskId)
           setTimeout(() => router.push(`/profile/${task.result.profile_id}`), 400)
         } else if (task.status === 'failed') {
           clearInterval(poll)
           creating.value = false
+          removeTask(taskId)
           toast('创建失败: ' + (task.error || '未知错误'), 'error')
         }
       } catch (e) {
