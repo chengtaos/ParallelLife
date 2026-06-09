@@ -20,3 +20,26 @@ frontend/dist/
 # IDE
 .vscode/
 .idea/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Coverage / Test
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Env variants (防止泄露真实 key)
+.env.*
+!.env.example
+
+# Temp / Backup
+*~
+*.bak
+*.swp
