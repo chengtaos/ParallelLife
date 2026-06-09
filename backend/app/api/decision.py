@@ -10,6 +10,7 @@ from ..models.task import TaskManager, TaskStatus
 from ..services.decision_engine import DecisionEngine
 from ..utils.logger import get_logger
 from ..utils.locale import t, get_locale, set_locale
+from ..utils.errors import friendly_error
 
 logger = get_logger('parallel-life.api.decision')
 
@@ -119,11 +120,11 @@ def explore_branch(profile_id: str):
                 })
 
             except Exception as e:
-                logger.error(f"分支推演失败: {str(e)}")
+                logger.error(f"分支推演失败: {traceback.format_exc()}")
                 branch.status = BranchStatus.FAILED
-                branch.error = str(e)
+                branch.error = friendly_error(e)
                 DecisionManager.save_branch(branch)
-                task_manager.fail_task(task_id, str(e))
+                task_manager.fail_task(task_id, friendly_error(e))
 
         thread = threading.Thread(target=run_explore, daemon=True)
         thread.start()
@@ -139,8 +140,8 @@ def explore_branch(profile_id: str):
         })
 
     except Exception as e:
-        logger.error(f"启动推演失败: {str(e)}")
-        return jsonify({"success": False, "error": str(e), "traceback": traceback.format_exc()}), 500
+        logger.error(f"启动推演失败: {traceback.format_exc()}")
+        return jsonify({"success": False, "error": friendly_error(e)}), 500
 
 
 @decision_bp.route('/task/<task_id>/status', methods=['GET'])

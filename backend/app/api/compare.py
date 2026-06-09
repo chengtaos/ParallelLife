@@ -9,6 +9,7 @@ from ..models.task import TaskManager, TaskStatus
 from ..services.comparison_agent import ComparisonAgent
 from ..utils.logger import get_logger
 from ..utils.locale import set_locale, get_locale
+from ..utils.errors import friendly_error
 
 compare_bp = Blueprint('compare', __name__)
 logger = get_logger('parallel-life.api.compare')
@@ -71,8 +72,8 @@ def compare_branches(profile_id: str):
                 })
 
             except Exception as e:
-                logger.error(f"对比分析失败: {str(e)}")
-                task_manager.fail_task(task_id, str(e))
+                logger.error(f"对比分析失败: {traceback.format_exc()}")
+                task_manager.fail_task(task_id, friendly_error(e))
 
         thread = threading.Thread(target=run_compare, daemon=True)
         thread.start()
@@ -87,8 +88,8 @@ def compare_branches(profile_id: str):
         })
 
     except Exception as e:
-        logger.error(f"启动对比失败: {str(e)}")
-        return jsonify({"success": False, "error": str(e), "traceback": traceback.format_exc()}), 500
+        logger.error(f"启动对比失败: {traceback.format_exc()}")
+        return jsonify({"success": False, "error": friendly_error(e)}), 500
 
 
 @compare_bp.route('/task/<task_id>/status', methods=['GET'])

@@ -11,6 +11,7 @@ from ..services.profile_extractor import ProfileExtractor
 from ..services.graph_builder import GraphBuilderService
 from ..utils.logger import get_logger
 from ..utils.locale import t, get_locale, set_locale
+from ..utils.errors import friendly_error
 
 logger = get_logger('parallel-life.api.profile')
 
@@ -101,11 +102,11 @@ def create_profile():
                 })
 
             except Exception as e:
-                logger.error(f"画像创建失败: {str(e)}")
+                logger.error(f"画像创建失败: {traceback.format_exc()}")
                 profile.status = ProfileStatus.FAILED
-                profile.error = str(e)
+                profile.error = friendly_error(e)
                 ProfileManager.save(profile)
-                task_manager.fail_task(task_id, str(e))
+                task_manager.fail_task(task_id, friendly_error(e))
 
         thread = threading.Thread(target=run_extract, daemon=True)
         thread.start()
@@ -121,8 +122,8 @@ def create_profile():
         })
 
     except Exception as e:
-        logger.error(f"创建画像失败: {str(e)}")
-        return jsonify({"success": False, "error": str(e), "traceback": traceback.format_exc()}), 500
+        logger.error(f"创建画像失败: {traceback.format_exc()}")
+        return jsonify({"success": False, "error": friendly_error(e)}), 500
 
 
 @profile_bp.route('/<profile_id>', methods=['GET'])
@@ -185,8 +186,8 @@ def get_decision_pattern(profile_id: str):
         return jsonify({"success": True, "data": result})
 
     except Exception as e:
-        logger.error(f"模式分析失败: {str(e)}")
-        return jsonify({"success": False, "error": str(e), "traceback": traceback.format_exc()}), 500
+        logger.error(f"模式分析失败: {traceback.format_exc()}")
+        return jsonify({"success": False, "error": friendly_error(e)}), 500
 
 
 @profile_bp.route('/task/<task_id>/status', methods=['GET'])
