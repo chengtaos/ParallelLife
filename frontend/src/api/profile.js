@@ -18,5 +18,8 @@ export const profileApi = {
   },
   getPattern(profileId) {
     return service.get(`/api/profile/${profileId}/pattern`)
+  },
+  getNetwork(profileId) {
+    return service.get(`/api/profile/${profileId}/network`)
   }
 }

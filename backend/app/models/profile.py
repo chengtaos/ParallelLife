@@ -28,6 +28,8 @@ class LifeProfile:
     extracted_text: str = ""
     graph_id: Optional[str] = None
     decision_ids: List[str] = field(default_factory=list)
+    entities: List[Dict[str, Any]] = field(default_factory=list)
+    relationships: List[Dict[str, Any]] = field(default_factory=list)
     error: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
@@ -40,6 +42,8 @@ class LifeProfile:
             "basic_info": self.basic_info,
             "graph_id": self.graph_id,
             "decision_ids": self.decision_ids,
+            "entities": self.entities,
+            "relationships": self.relationships,
             "error": self.error,
         }
 
@@ -58,6 +62,8 @@ class LifeProfile:
             extracted_text=data.get('extracted_text', ''),
             graph_id=data.get('graph_id'),
             decision_ids=data.get('decision_ids', []),
+            entities=data.get('entities', []),
+            relationships=data.get('relationships', []),
             error=data.get('error'),
         )
 

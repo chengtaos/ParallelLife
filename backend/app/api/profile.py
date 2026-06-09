@@ -53,6 +53,8 @@ def create_profile():
                                          f"{len(result.get('decisions', []))} 个决策点")
 
                 profile.basic_info = result.get('basic_info', {})
+                profile.entities = result.get('entities', [])
+                profile.relationships = result.get('relationships', [])
                 profile.status = ProfileStatus.CREATED
                 ProfileManager.save(profile)
 
@@ -137,6 +139,46 @@ def get_profile(profile_id: str):
     result["input_text"] = ProfileManager.get_input_text(profile_id)
 
     return jsonify({"success": True, "data": result})
+
+
+@profile_bp.route('/<profile_id>/network', methods=['GET'])
+def get_profile_network(profile_id: str):
+    """获取画像人物关系网数据（供 D3 可视化）"""
+    profile = ProfileManager.get(profile_id)
+    if not profile:
+        return jsonify({"success": False, "error": f"画像不存在: {profile_id}"}), 404
+
+    # 构建节点+边
+    nodes = []
+    node_names = set()
+    for e in profile.entities:
+        name = e.get('name', '')
+        if name and name not in node_names:
+            node_names.add(name)
+            nodes.append({
+                "id": name,
+                "type": e.get('type', 'Person'),
+                "description": e.get('description', ''),
+                "importance": e.get('attributes', {}).get('importance', 'medium'),
+                "role": e.get('attributes', {}).get('role', ''),
+            })
+
+    edges = []
+    for r in profile.relationships:
+        source = r.get('source', '')
+        target = r.get('target', '')
+        if source and target:
+            edges.append({
+                "source": source,
+                "target": target,
+                "type": r.get('type', 'RELATED'),
+                "label": r.get('description', ''),
+            })
+
+    return jsonify({
+        "success": True,
+        "data": {"nodes": nodes, "edges": edges}
+    })
 
 
 @profile_bp.route('/list', methods=['GET'])

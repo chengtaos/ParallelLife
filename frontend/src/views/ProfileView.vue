@@ -45,6 +45,11 @@
         </div>
       </section>
 
+      <section v-if="networkData && networkData.nodes?.length" class="network-section">
+        <h2>人物关系网</h2>
+        <NetworkGraph :data="networkData" />
+      </section>
+
       <section class="decisions-section">
         <div class="section-title-row">
           <h2>{{ $t('profile.decisions') }}</h2>
@@ -139,6 +144,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import DecisionCard from '../components/DecisionCard.vue'
+import NetworkGraph from '../components/NetworkGraph.vue'
 import { profileApi } from '../api/profile'
 import { decisionApi } from '../api/decision'
 import { toast } from '../toast'
@@ -160,6 +166,7 @@ const depths = ['1y', '3y', '5y', '10y']
 const branches = ref([])
 const pattern = ref(null)
 const patternLoading = ref(false)
+const networkData = ref(null)
 const activeTaskCount = computed(() => getActiveTaskCount(props.profileId))
 
 async function loadPattern() {
@@ -177,14 +184,16 @@ async function loadPattern() {
 async function loadProfile() {
   loading.value = true
   try {
-    const [pRes, dRes, bRes] = await Promise.all([
+    const [pRes, dRes, bRes, nRes] = await Promise.all([
       profileApi.get(props.profileId),
       decisionApi.list(props.profileId),
-      decisionApi.listBranches(props.profileId)
+      decisionApi.listBranches(props.profileId),
+      profileApi.getNetwork(props.profileId)
     ])
     profile.value = pRes.data
     decisions.value = dRes.data || []
     branches.value = bRes.data || []
+    networkData.value = nRes?.data || null
   } catch (e) {
     console.error('加载画像失败:', e)
   } finally {
@@ -285,6 +294,8 @@ async function confirmDelete() {
 .info-list { margin-bottom: 16px; }
 .info-list h3 { font-size: 12px; color: #999; text-transform: uppercase; margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; }
 .list-item { font-size: 14px; padding: 6px 0; border-bottom: 1px solid #f5f5f5; }
+.network-section { margin-bottom: 40px; }
+.network-section h2 { font-family: 'Space Grotesk', sans-serif; font-size: 18px; margin-bottom: 16px; }
 .decisions-section h2 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; }
 .section-title-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 20px; }
 .branch-count { font-size: 12px; color: #999; font-family: 'JetBrains Mono', monospace; }
