@@ -65,6 +65,7 @@ class BranchTimeline:
     narrative: str = ""
     causal_chain: List[Dict[str, Any]] = field(default_factory=list)
     dimensional_trajectory: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    sub_decisions: List[Dict[str, Any]] = field(default_factory=list)
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
     completed_at: Optional[str] = None
     error: Optional[str] = None
@@ -80,6 +81,7 @@ class BranchTimeline:
             "narrative": self.narrative,
             "causal_chain": self.causal_chain,
             "dimensional_trajectory": self.dimensional_trajectory,
+            "sub_decisions": self.sub_decisions,
             "created_at": self.created_at,
             "completed_at": self.completed_at,
             "error": self.error,
@@ -100,6 +102,7 @@ class BranchTimeline:
             narrative=data.get('narrative', ''),
             causal_chain=data.get('causal_chain', []),
             dimensional_trajectory=data.get('dimensional_trajectory', {}),
+            sub_decisions=data.get('sub_decisions', []),
             created_at=data.get('created_at', ''),
             completed_at=data.get('completed_at'),
             error=data.get('error'),

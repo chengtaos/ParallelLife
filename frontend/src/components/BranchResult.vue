@@ -50,6 +50,32 @@
         </div>
       </div>
     </section>
+
+    <!-- 次级决策 -->
+    <section v-if="branch.sub_decisions?.length" class="sub-decisions-section">
+      <h2>路径中的新岔路口</h2>
+      <p class="sub-hint">这条人生路径中自然产生的新的重大决策点，点击可继续探索</p>
+      <div v-for="(sd, i) in branch.sub_decisions" :key="i" class="sub-decision-card">
+        <div class="sd-header">
+          <span class="sd-num">{{ i + 1 }}</span>
+          <span class="sd-time">{{ sd.time_offset }}</span>
+        </div>
+        <p class="sd-scenario">{{ sd.scenario }}</p>
+        <div class="sd-branches">
+          <div v-for="(b, j) in sd.branches" :key="j" class="sd-branch">
+            <span class="sd-marker">○</span>
+            <div class="sd-branch-content">
+              <span class="sd-label">{{ b.label }}</span>
+              <div v-if="b.pros?.length || b.cons?.length" class="sd-proscons">
+                <span v-for="p in b.pros" :key="p" class="pro">+ {{ p }}</span>
+                <span v-for="c in b.cons" :key="c" class="con">− {{ c }}</span>
+              </div>
+            </div>
+            <button class="sd-explore-btn" @click="$emit('exploreSub', sd, b.label)">推演 →</button>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -58,6 +84,7 @@ import { ref, computed, watch } from 'vue'
 import DimRadar from './DimRadar.vue'
 
 const props = defineProps({ branch: Object })
+defineEmits(['exploreSub'])
 
 const dims = ['career_achievement', 'wealth', 'social_density', 'happiness', 'location_stability', 'health', 'self_fulfillment']
 
@@ -111,4 +138,24 @@ h2 { font-family: 'Space Grotesk', sans-serif; font-size: 20px; margin-bottom: 1
 .score-bar { height: 4px; background: #eee; margin-bottom: 6px; }
 .score-fill { height: 100%; background: #000; transition: width 0.5s ease; }
 .score-reason { font-size: 12px; color: #999; line-height: 1.5; }
+
+.sub-decisions-section { margin-bottom: 40px; }
+.sub-hint { font-size: 12px; color: #999; margin-bottom: 20px; }
+.sub-decision-card { border: 1px solid #eee; padding: 20px; margin-bottom: 16px; }
+.sd-header { display: flex; gap: 12px; align-items: baseline; margin-bottom: 10px; }
+.sd-num { font-size: 12px; font-weight: 700; font-family: 'JetBrains Mono', monospace; background: #000; color: #fff; padding: 2px 8px; }
+.sd-time { font-size: 11px; color: #999; font-family: 'JetBrains Mono', monospace; }
+.sd-scenario { font-size: 14px; line-height: 1.6; color: #333; margin-bottom: 16px; }
+.sd-branches { }
+.sd-branch { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+.sd-branch:last-child { border-bottom: none; }
+.sd-marker { font-size: 12px; color: #999; margin-top: 2px; }
+.sd-branch-content { flex: 1; }
+.sd-label { font-size: 13px; font-weight: 500; }
+.sd-proscons { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 8px; }
+.pro, .con { font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+.pro { color: #333; }
+.con { color: #999; }
+.sd-explore-btn { background: none; border: 1px solid #000; padding: 4px 10px; font-size: 11px; font-family: 'JetBrains Mono', monospace; cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0; }
+.sd-explore-btn:hover { background: #000; color: #fff; }
 </style>

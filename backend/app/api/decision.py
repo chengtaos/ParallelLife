@@ -54,6 +54,9 @@ def explore_branch(profile_id: str):
         actual_branch = next((b for b in decision.branches if b.get('is_actual')), None)
         actual_label = actual_branch['label'] if actual_branch else '未指定'
 
+        # 支持传入自定义场景（次级决策没有预存 DecisionNode）
+        custom_scenario = data.get('scenario', '')
+
         branch = BranchTimeline(
             branch_id=f"branch_{profile_id}_{len(DecisionManager.list_branches(profile_id))}",
             decision_id=decision_id,
@@ -91,7 +94,7 @@ def explore_branch(profile_id: str):
 
                 engine = DecisionEngine()
                 result = engine.explore_branch(
-                    decision_scenario=decision.scenario,
+                    decision_scenario=custom_scenario or decision.scenario,
                     branch_label=branch_label,
                     actual_path_context=actual_path_ctx,
                     related_entities=related,
@@ -102,6 +105,7 @@ def explore_branch(profile_id: str):
                 branch.narrative = result.get('narrative', '')
                 branch.causal_chain = result.get('causal_chain', [])
                 branch.dimensional_trajectory = result.get('dimensional_trajectory', {})
+                branch.sub_decisions = result.get('sub_decisions', [])
                 branch.status = BranchStatus.COMPLETED
                 from datetime import datetime
                 branch.completed_at = datetime.now().isoformat()

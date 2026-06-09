@@ -32,7 +32,7 @@
         <span class="meta-tag">深度: {{ branch.depth }}</span>
       </div>
 
-      <BranchResult v-if="branch.status === 'completed'" :branch="branch" />
+      <BranchResult v-if="branch.status === 'completed'" :branch="branch" @exploreSub="onExploreSub" />
       <div v-else-if="branch.status === 'failed'" class="error-state">
         <p>推演失败: {{ branch.error }}</p>
         <button class="back-btn" @click="router.push(`/profile/${profileId}`)" style="margin-top:16px">← 返回画像</button>
@@ -105,6 +105,24 @@ function startPolling() {
       genProgress.value = Math.min(genProgress.value + 1, 85)
     }
   }, 2000)
+}
+
+async function onExploreSub(subDecision, branchLabel) {
+  try {
+    const exploreRes = await decisionApi.explore(
+      props.profileId,
+      branch.value.decision_id,
+      branchLabel,
+      '5y',
+      subDecision.scenario  // 传入次级决策的场景
+    )
+    const newTaskId = exploreRes.data.task_id
+    const newBranchId = exploreRes.data.branch_id
+    // 跳转到新分支页
+    router.push(`/branch/${props.profileId}/${newBranchId}`)
+  } catch (e) {
+    alert('推演失败: ' + e.message)
+  }
 }
 
 onMounted(fetchBranch)
