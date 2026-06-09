@@ -147,7 +147,7 @@ class DecisionManager:
             if fn.endswith('.json'):
                 with open(os.path.join(d, fn), 'r', encoding='utf-8') as f:
                     nodes.append(DecisionNode.from_dict(json.load(f)))
-        nodes.sort(key=lambda n: n.timestamp)
+        nodes.sort(key=lambda n: n.timestamp or '')
         return nodes
 
     @classmethod
