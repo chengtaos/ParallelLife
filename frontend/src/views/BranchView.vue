@@ -32,7 +32,7 @@
         <span class="meta-tag">深度: {{ branch.depth }}</span>
       </div>
 
-      <BranchResult v-if="branch.status === 'completed'" :branch="branch" @exploreSub="onExploreSub" />
+      <BranchResult v-if="branch.status === 'completed'" :branch="branch" :subExploring="subExploring" @exploreSub="onExploreSub" />
       <div v-else-if="branch.status === 'failed'" class="error-state">
         <p>推演失败: {{ branch.error }}</p>
         <button class="back-btn" @click="router.push(`/profile/${profileId}`)" style="margin-top:16px">← 返回画像</button>
@@ -107,21 +107,30 @@ function startPolling() {
   }, 2000)
 }
 
+const subExploring = ref(false)
+
 async function onExploreSub(subDecision, branchLabel) {
+  if (subExploring.value) return
+  subExploring.value = true
   try {
     const exploreRes = await decisionApi.explore(
       props.profileId,
       branch.value.decision_id,
       branchLabel,
       '5y',
-      subDecision.scenario  // 传入次级决策的场景
+      subDecision.scenario || ''
     )
-    const newTaskId = exploreRes.data.task_id
     const newBranchId = exploreRes.data.branch_id
-    // 跳转到新分支页
+    if (!newBranchId) {
+      alert('创建分支失败：未返回 branch_id')
+      subExploring.value = false
+      return
+    }
     router.push(`/branch/${props.profileId}/${newBranchId}`)
   } catch (e) {
-    alert('推演失败: ' + e.message)
+    console.error('次级决策推演失败:', e)
+    alert('推演失败: ' + (e.response?.data?.error || e.message))
+    subExploring.value = false
   }
 }
 

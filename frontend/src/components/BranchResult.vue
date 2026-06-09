@@ -71,7 +71,10 @@
                 <span v-for="c in b.cons" :key="c" class="con">− {{ c }}</span>
               </div>
             </div>
-            <button class="sd-explore-btn" @click="$emit('exploreSub', sd, b.label)">推演 →</button>
+            <button class="sd-explore-btn" :disabled="subExploring"
+                    @click="$emit('exploreSub', sd, b.label)">
+              {{ subExploring ? '...' : '推演 →' }}
+            </button>
           </div>
         </div>
       </div>
@@ -83,7 +86,7 @@
 import { ref, computed, watch } from 'vue'
 import DimRadar from './DimRadar.vue'
 
-const props = defineProps({ branch: Object })
+const props = defineProps({ branch: Object, subExploring: Boolean })
 defineEmits(['exploreSub'])
 
 const dims = ['career_achievement', 'wealth', 'social_density', 'happiness', 'location_stability', 'health', 'self_fulfillment']
