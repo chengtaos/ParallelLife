@@ -98,7 +98,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import { profileApi } from '../api/profile'
@@ -151,14 +151,17 @@ const createMessage = ref('')
 const profileName = ref('')
 const profileText = ref('')
 
-onMounted(async () => {
+async function loadProfiles() {
   try {
     const res = await profileApi.list()
     profiles.value = res.data || []
   } catch (e) {
     console.error('加载画像列表失败:', e)
   }
-})
+}
+
+// 认证通过后自动加载画像列表
+watch(authed, (val) => { if (val) loadProfiles() })
 
 async function createProfile() {
   if (!profileText.value.trim()) return
