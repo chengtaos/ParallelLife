@@ -20,6 +20,8 @@ const service = axios.create({
 service.interceptors.request.use(config => {
   config.headers['Accept-Language'] = i18n.global.locale.value
   config.headers['X-User-Key'] = getUserKey()
+  const token = sessionStorage.getItem('auth_token')
+  if (token) config.headers['X-Auth-Token'] = token
   return config
 }, error => Promise.reject(error))
 

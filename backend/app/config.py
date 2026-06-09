@@ -24,6 +24,9 @@ class Config:
     # Zep
     ZEP_API_KEY = os.environ.get('ZEP_API_KEY')
 
+    # 访问控制
+    ACCESS_PASSWORD = os.environ.get('ACCESS_PASSWORD', '')
+
     # Upload
     UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '../uploads')
     PROFILES_DIR = os.path.join(UPLOAD_FOLDER, 'profiles')

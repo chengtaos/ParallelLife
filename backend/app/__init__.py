@@ -23,7 +23,22 @@ def create_app(config_class=Config):
         logger.info("Parallel Life Backend 启动中...")
         logger.info("=" * 50)
 
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    CORS(app, resources={r"/api/*": {"origins": "*", "allow_headers": ["Content-Type", "Accept-Language", "X-User-Key", "X-Auth-Token"]}})
+
+    # 注册认证模块（在所有 API 之前）
+    from .api.auth import auth_bp, verify_token
+    app.register_blueprint(auth_bp, url_prefix='/api')
+
+    # 访问控制中间件：拦截除 auth 和 health 之外的所有 /api/ 请求
+    @app.before_request
+    def check_auth():
+        if request.path.startswith('/api/') \
+           and not request.path.startswith('/api/auth') \
+           and request.path != '/health':
+            token = request.headers.get('X-Auth-Token', '')
+            if not verify_token(token):
+                from flask import jsonify
+                return jsonify({"success": False, "error": "未授权访问"}), 401
 
     @app.before_request
     def log_request():

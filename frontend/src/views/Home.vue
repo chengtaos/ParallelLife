@@ -1,5 +1,23 @@
 <template>
   <div class="home-container">
+    <!-- 密码门 -->
+    <div v-if="!authed" class="auth-gate">
+      <div class="auth-card">
+        <h1>PARALLEL LIFE</h1>
+        <p v-if="authError" class="auth-error">{{ authError }}</p>
+        <form @submit.prevent="doLogin">
+          <input v-model="password" type="password" placeholder="访问密码"
+                 class="auth-input" :disabled="authLoading" autofocus />
+          <button type="submit" class="auth-btn" :disabled="authLoading">
+            <span v-if="authLoading" class="spinner"></span>
+            {{ authLoading ? '' : '进入 →' }}
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 主内容 -->
+    <template v-if="authed">
     <nav class="navbar">
       <div class="nav-brand">{{ $t('nav.brand') }}</div>
       <div class="nav-links">
@@ -75,6 +93,7 @@
         </div>
       </section>
     </div>
+    </template>
   </div>
 </template>
 
@@ -83,10 +102,47 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import { profileApi } from '../api/profile'
+import { authApi } from '../api/auth'
 import { toast } from '../toast'
 import { addTask, updateTask, removeTask } from '../store/tasks'
 
 const router = useRouter()
+
+// 密码门
+const authed = ref(false)
+const password = ref('')
+const authLoading = ref(true)  // 先检查 token
+const authError = ref('')
+
+onMounted(async () => {
+  const token = sessionStorage.getItem('auth_token')
+  if (!token) { authLoading.value = false; return }
+  try {
+    const res = await authApi.check()
+    authed.value = res.data.valid
+  } catch (e) { sessionStorage.removeItem('auth_token') }
+  authLoading.value = false
+})
+
+async function doLogin() {
+  if (!password.value) return
+  authLoading.value = true
+  authError.value = ''
+  try {
+    const res = await authApi.login(password.value)
+    if (res.data.token) {
+      sessionStorage.setItem('auth_token', res.data.token)
+      authed.value = true
+    } else {
+      authed.value = true  // 未设置密码时直接放行
+    }
+  } catch (e) {
+    authError.value = '密码错误'
+    password.value = ''
+  }
+  authLoading.value = false
+}
+
 const profiles = ref([])
 const showCreate = ref(false)
 const creating = ref(false)
@@ -153,6 +209,16 @@ async function createProfile() {
 
 <style scoped>
 .home-container { min-height: 100vh; max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+.auth-gate { position: fixed; inset: 0; background: #fff; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+.auth-card { text-align: center; width: 320px; }
+.auth-card h1 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; letter-spacing: 4px; margin-bottom: 32px; }
+.auth-error { color: #d00; font-size: 13px; margin-bottom: 12px; }
+.auth-card form { display: flex; flex-direction: column; gap: 12px; }
+.auth-input { width: 100%; border: 1px solid #000; padding: 14px 16px; font-size: 16px; font-family: 'JetBrains Mono', monospace; text-align: center; outline: none; }
+.auth-input:focus { border-width: 2px; }
+.auth-btn { padding: 14px; background: #000; color: #fff; border: none; font-size: 15px; font-family: 'Space Grotesk', sans-serif; display: inline-flex; align-items: center; justify-content: center; min-height: 48px; }
+.auth-btn:disabled { background: #666; }
+
 .navbar { display: flex; justify-content: space-between; align-items: center; padding: 24px 0; border-bottom: 1px solid #eee; }
 .nav-brand { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: 2px; }
 .nav-links { display: flex; align-items: center; gap: 16px; }
