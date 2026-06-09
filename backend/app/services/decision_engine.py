@@ -58,6 +58,11 @@ DECISION_ENGINE_SYSTEM = """你是一位人生推演专家，擅长基于已知�
 - 因果链的每一步应包含1-3个受影响的维度
 - sub_decisions：在这条路径演变过程中，自然会遇到的 0-2 个新的重大人生决策点
 - sub_decisions 必须是路径演变中合理出现的新岔路口，不要硬凑
+
+重要：如果用户提示中包含"此前已经发生的事件"，说明这是一个嵌套的次级决策。此时：
+- baseline 评分必须反映这些已发生事件带来的影响，而非原始人生决策时的状态
+- 因果链从当前时间点继续推演，不要重复此前已经发生的事件
+- narrative 应该承接此前事件，讲述从当前决策点开始的后续故事
 """
 
 
@@ -72,9 +77,13 @@ class DecisionEngine:
         actual_path_context: str,
         related_entities: List[str],
         depth: str = "5y",
-        progress_callback: Optional[Callable] = None
+        progress_callback: Optional[Callable] = None,
+        parent_context: str = "",
     ) -> Dict[str, Any]:
-        """推演反事实分支"""
+        """推演反事实分支
+
+        parent_context: 次级决策时，父分支在此决策点之前已发生的事件上下文
+        """
         lang_instr = get_language_instruction()
 
         depth_desc = {"1y": "1年", "3y": "3年", "5y": "5年", "10y": "10年"}
@@ -88,8 +97,18 @@ class DecisionEngine:
         if depth in ("5y", "10y"):
             timeline_points += ", 5y（5年后）"
 
+        prefix = ""
+        if parent_context:
+            prefix = f"""
+
+⚠️ 这是一个嵌套在已有推演路径中的次级决策。
+在此决策之前，这条人生路径中已经发生的事件如下。请务必基于这些事件来设定 baseline 评分，因果链从当前时间点继续，叙事承接此前事件：
+{parent_context}
+"""
+
         user_prompt = f"""{lang_instr}
 
+{prefix}
 决策场景：{decision_scenario}
 
 用户实际选择的路径是：{actual_path_context}

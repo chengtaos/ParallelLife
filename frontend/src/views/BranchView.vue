@@ -112,13 +112,22 @@ const subExploring = ref(false)
 async function onExploreSub(subDecision, branchLabel) {
   if (subExploring.value) return
   subExploring.value = true
+
+  // 构建父分支上下文：此决策点之前已发生的事件
+  const parentNarrative = branch.value.narrative || ''
+  const parentChain = (branch.value.causal_chain || [])
+    .map(s => `${s.time_offset}: ${s.event} → ${s.consequence}`)
+    .join('\n')
+  const parentContext = `此前路径摘要：${parentNarrative.slice(0, 500)}\n\n此前已发生的事件链：\n${parentChain}`
+
   try {
     const exploreRes = await decisionApi.explore(
       props.profileId,
       branch.value.decision_id,
       branchLabel,
       '5y',
-      subDecision.scenario || ''
+      subDecision.scenario || '',
+      parentContext
     )
     const newBranchId = exploreRes.data.branch_id
     if (!newBranchId) {

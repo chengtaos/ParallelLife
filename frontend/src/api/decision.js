@@ -4,12 +4,13 @@ export const decisionApi = {
   list(profileId) {
     return service.get(`/api/decision/${profileId}/list`)
   },
-  explore(profileId, decisionId, branchLabel, depth, scenario) {
+  explore(profileId, decisionId, branchLabel, depth, scenario, parentContext) {
     return service.post(`/api/decision/${profileId}/explore`, {
       decision_id: decisionId,
       branch_label: branchLabel,
       depth,
-      scenario: scenario || ''
+      scenario: scenario || '',
+      parent_context: parentContext || ''
     })
   },
   getTaskStatus(taskId) {

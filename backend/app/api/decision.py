@@ -56,6 +56,7 @@ def explore_branch(profile_id: str):
 
         # 支持传入自定义场景（次级决策没有预存 DecisionNode）
         custom_scenario = data.get('scenario', '')
+        parent_context = data.get('parent_context', '')
 
         branch = BranchTimeline(
             branch_id=f"branch_{profile_id}_{len(DecisionManager.list_branches(profile_id))}",
@@ -100,6 +101,7 @@ def explore_branch(profile_id: str):
                     related_entities=related,
                     depth=depth,
                     progress_callback=progress_cb,
+                    parent_context=parent_context,
                 )
 
                 branch.narrative = result.get('narrative', '')
