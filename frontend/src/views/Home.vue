@@ -35,8 +35,9 @@
           </div>
           <div class="form-group">
             <label>{{ $t('profile.textLabel') }}</label>
-            <textarea v-model="profileText" :placeholder="$t('profile.textPlaceholder')" class="textarea" rows="12"></textarea>
-            <p class="hint">{{ $t('profile.textHint') }}</p>
+            <textarea v-model="profileText" :placeholder="$t('profile.textPlaceholder')" class="textarea" rows="12"
+                      :maxlength="15000"></textarea>
+            <p class="hint">{{ $t('profile.textHint') }}（{{ profileText.length }}/15000）</p>
           </div>
           <button class="submit-btn" @click="createProfile" :disabled="creating">
             <span v-if="creating" class="spinner"></span>
@@ -82,6 +83,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import { profileApi } from '../api/profile'
+import { toast } from '../toast'
 
 const router = useRouter()
 const profiles = ref([])
@@ -109,7 +111,14 @@ async function createProfile() {
   try {
     const res = await profileApi.create(profileText.value, profileName.value || 'Unnamed')
     const taskId = res.data.task_id
+    const startedAt = Date.now()
     const poll = setInterval(async () => {
+      if (Date.now() - startedAt > 120000) {
+        clearInterval(poll)
+        creating.value = false
+        toast('创建超时，请检查网络后重试', 'error')
+        return
+      }
       try {
         const statusRes = await profileApi.getTaskStatus(taskId)
         const task = statusRes.data
@@ -122,7 +131,7 @@ async function createProfile() {
         } else if (task.status === 'failed') {
           clearInterval(poll)
           creating.value = false
-          alert('创建失败: ' + (task.error || '未知错误'))
+          toast('创建失败: ' + (task.error || '未知错误'), 'error')
         }
       } catch (e) {
         // 继续轮询
@@ -130,7 +139,7 @@ async function createProfile() {
     }, 1500)
   } catch (e) {
     creating.value = false
-    alert('创建失败: ' + e.message)
+    toast('创建失败: ' + e.message, 'error')
   }
 }
 </script>

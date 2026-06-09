@@ -25,6 +25,8 @@ def create_profile():
 
         if not text:
             return jsonify({"success": False, "error": "请输入人生描述文本"}), 400
+        if len(text) > 15000:
+            return jsonify({"success": False, "error": "文本超过15000字符上限，请精简描述"}), 400
 
         profile = ProfileManager.create(name=name)
         ProfileManager.save_input_text(profile.profile_id, text)

@@ -140,6 +140,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import DecisionCard from '../components/DecisionCard.vue'
 import { profileApi } from '../api/profile'
 import { decisionApi } from '../api/decision'
+import { toast } from '../toast'
 
 const props = defineProps({ profileId: String })
 const router = useRouter()
@@ -210,7 +211,14 @@ async function startExplore() {
     const res = await decisionApi.explore(props.profileId, exploreTarget.value.decision_id, branchLabel, selectedDepth.value)
     const taskId = res.data.task_id
     const branchId = res.data.branch_id
+    const startedAt = Date.now()
     const poll = setInterval(async () => {
+      if (Date.now() - startedAt > 180000) {
+        clearInterval(poll)
+        exploring.value = false
+        toast('推演超时，请重试', 'error')
+        return
+      }
       const statusRes = await decisionApi.getTaskStatus(taskId)
       if (statusRes.data.status === 'completed') {
         clearInterval(poll)
@@ -218,12 +226,12 @@ async function startExplore() {
       } else if (statusRes.data.status === 'failed') {
         clearInterval(poll)
         exploring.value = false
-        alert('推演失败: ' + (statusRes.data.error || '未知错误'))
+        toast('推演失败: ' + (statusRes.data.error || '未知错误'), 'error')
       }
     }, 2000)
   } catch (e) {
     exploring.value = false
-    alert('推演失败: ' + e.message)
+    toast('推演失败: ' + e.message, 'error')
   }
 }
 
@@ -233,7 +241,7 @@ async function confirmDelete() {
     await profileApi.delete(props.profileId)
     router.push('/')
   } catch (e) {
-    alert('删除失败: ' + e.message)
+    toast('删除失败: ' + e.message, 'error')
   }
 }
 </script>

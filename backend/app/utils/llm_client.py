@@ -2,10 +2,14 @@
 
 import json
 import re
+import time
 from typing import Optional, Dict, Any, List
 from openai import OpenAI
 
 from ..config import Config
+from .logger import get_logger
+
+logger = get_logger('parallel-life.llm')
 
 
 class LLMClient:
@@ -29,6 +33,25 @@ class LLMClient:
             base_url=self.base_url
         )
 
+    def _call_with_retry(self, kwargs: dict, max_retries: int = 3) -> str:
+        """带重试的 LLM 调用"""
+        last_error = None
+        for attempt in range(max_retries):
+            try:
+                response = self.client.chat.completions.create(**kwargs)
+                content = response.choices[0].message.content
+                content = re.sub(r'<think>[\s\S]*?</think>', '', content).strip()
+                return content
+            except Exception as e:
+                last_error = e
+                if attempt < max_retries - 1:
+                    wait = 2 ** attempt
+                    logger.warning(f"LLM 调用失败 (尝试 {attempt + 1}/{max_retries})，{wait}s 后重试: {str(e)[:100]}")
+                    time.sleep(wait)
+                else:
+                    logger.error(f"LLM 调用失败，已达最大重试次数: {str(e)[:200]}")
+        raise last_error
+
     def chat(
         self,
         messages: List[Dict[str, str]],
@@ -46,10 +69,7 @@ class LLMClient:
         if response_format:
             kwargs["response_format"] = response_format
 
-        response = self.client.chat.completions.create(**kwargs)
-        content = response.choices[0].message.content
-        content = re.sub(r'<think>[\s\S]*?</think>', '', content).strip()
-        return content
+        return self._call_with_retry(kwargs)
 
     def chat_json(
         self,
@@ -72,4 +92,4 @@ class LLMClient:
         try:
             return json.loads(cleaned)
         except json.JSONDecodeError:
-            raise ValueError(f"LLM返回的JSON格式无效: {cleaned}")
+            raise ValueError(f"LLM返回的JSON格式无效: {cleaned[:200]}")

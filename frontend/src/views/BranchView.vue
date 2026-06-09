@@ -50,6 +50,7 @@ import { useRouter } from 'vue-router'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import BranchResult from '../components/BranchResult.vue'
 import { decisionApi } from '../api/decision'
+import { toast } from '../toast'
 
 const props = defineProps({ profileId: String, branchId: String })
 const router = useRouter()
@@ -87,7 +88,14 @@ async function fetchBranch() {
 
 function startPolling() {
   if (pollTimer) clearInterval(pollTimer)
+  const startedAt = Date.now()
   pollTimer = setInterval(async () => {
+    if (Date.now() - startedAt > 180000) {
+      clearInterval(pollTimer)
+      generating.value = false
+      branch.value = { status: 'failed', error: '推演超时，请重试' }
+      return
+    }
     try {
       const res = await decisionApi.getBranch(props.profileId, props.branchId)
       branch.value = res.data
@@ -134,14 +142,14 @@ async function onExploreSub(subDecision, branchLabel) {
     )
     const newBranchId = exploreRes.data.branch_id
     if (!newBranchId) {
-      alert('创建分支失败：未返回 branch_id')
+      toast('创建分支失败', 'error')
       subExploring.value = false
       return
     }
     router.push(`/branch/${props.profileId}/${newBranchId}`)
   } catch (e) {
     console.error('次级决策推演失败:', e)
-    alert('推演失败: ' + (e.response?.data?.error || e.message))
+    toast('推演失败: ' + (e.response?.data?.error || e.message), 'error')
     subExploring.value = false
   }
 }

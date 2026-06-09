@@ -94,6 +94,7 @@ import { useRouter } from 'vue-router'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import { decisionApi } from '../api/decision'
 import { compareApi } from '../api/compare'
+import { toast } from '../toast'
 
 const props = defineProps({ profileId: String })
 const router = useRouter()
@@ -129,7 +130,14 @@ async function startCompare() {
   try {
     const res = await compareApi.compare(props.profileId, selectedIds.value)
     const taskId = res.data.task_id
+    const startedAt = Date.now()
     const poll = setInterval(async () => {
+      if (Date.now() - startedAt > 120000) {
+        clearInterval(poll)
+        comparing.value = false
+        toast('对比超时，请重试', 'error')
+        return
+      }
       genProgress.value = Math.min(genProgress.value + 5, 90)
       try {
         const s = await compareApi.getTaskStatus(taskId)
@@ -141,13 +149,13 @@ async function startCompare() {
         } else if (s.data.status === 'failed') {
           clearInterval(poll)
           comparing.value = false
-          alert('对比失败: ' + (s.data.error || '未知错误'))
+          toast('对比失败: ' + (s.data.error || '未知错误'), 'error')
         }
       } catch (e) { /* continue polling */ }
     }, 2000)
   } catch (e) {
     comparing.value = false
-    alert('对比失败: ' + e.message)
+    toast('对比失败: ' + e.message, 'error')
   }
 }
 
