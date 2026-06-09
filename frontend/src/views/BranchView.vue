@@ -42,7 +42,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import BranchResult from '../components/BranchResult.vue'
@@ -136,6 +136,17 @@ async function onExploreSub(subDecision, branchLabel) {
 
 onMounted(fetchBranch)
 onUnmounted(() => { if (pollTimer) clearInterval(pollTimer) })
+
+// branchId 变化时重新加载（次级决策跳转到新分支时触发）
+watch(() => props.branchId, () => {
+  if (pollTimer) clearInterval(pollTimer)
+  loading.value = true
+  generating.value = false
+  genProgress.value = 0
+  branch.value = null
+  subExploring.value = false
+  fetchBranch()
+})
 </script>
 
 <style scoped>
