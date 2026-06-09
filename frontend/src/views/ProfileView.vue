@@ -63,7 +63,7 @@
                  class="branch-option" :class="{ selected: selectedBranch === idx, actual: b.is_actual }"
                  @click="selectBranch(idx)">
               <input v-if="!b.is_actual" v-model="b.label"
-                     class="branch-input" @click.stop />
+                     class="branch-input" />
               <span v-else>{{ b.label }}</span>
               <span v-if="b.is_actual" class="small-tag">{{ $t('decision.actualLabel') }}</span>
             </div>
