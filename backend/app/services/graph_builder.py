@@ -24,22 +24,33 @@ class GraphBuilderService:
         relationships: List[Dict[str, Any]],
         input_text: str
     ) -> str:
-        """构建人生画像的知识图谱"""
-        graph_name = f"ParallelLife - {profile_name} ({profile_id})"
-        logger.info(f"创建 Zep 图谱: {graph_name}")
+        """构建人生画像的知识图谱
 
-        graph = self.client.graph.add(
-            user_id=profile_id,
-            name=graph_name,
-            data_type="text",
-            data=input_text[:10000],
-            max_robots=1,
-            auto_create_entities=True
+        Zep SDK 3.13 API:
+        - graph.create(graph_id, name) → 显式创建图谱
+        - graph.add(data, type, graph_id, source_description) → 添加 Episodic 数据
+        """
+        graph_id = profile_id  # 用 profile_id 作为 graph_id，保持一致
+        logger.info(f"创建 Zep 图谱: graph_id={graph_id}, name={profile_name}")
+
+        # Step 1: 显式创建图谱
+        graph = self.client.graph.create(
+            graph_id=graph_id,
+            name=f"ParallelLife - {profile_name}",
+            description=f"人生画像图谱：{profile_name}"
         )
-        graph_id = graph.user_id
-        logger.info(f"图谱创建成功: {graph_id}")
+        logger.info(f"图谱创建成功: {graph.graph_id}")
 
-        # 注入明确指定的实体
+        # Step 2: 添加主文本数据（触发 Zep 自动提取实体）
+        self.client.graph.add(
+            data=input_text[:10000],
+            type="text",
+            graph_id=graph_id,
+            source_description="用户人生描述主文本"
+        )
+        logger.info("主文本数据已添加")
+
+        # Step 3: 注入明确指定的实体信息
         if entities:
             entity_texts = []
             for e in entities:
@@ -51,14 +62,15 @@ class GraphBuilderService:
                     f"类型：{e['type']}。角色：{role}。重要性：{importance}。"
                 )
             entity_episode = "以下是在用户人生中出现的所有关键人物和实体：\n\n" + "\n".join(entity_texts)
-            self.client.graph.episodic.add(
-                graph_id=graph_id,
+            self.client.graph.add(
                 data=entity_episode,
-                data_type="text",
-                source_type="profile_entities"
+                type="text",
+                graph_id=graph_id,
+                source_description="用户人生中的关键实体"
             )
+            logger.info(f"已注入 {len(entities)} 个实体")
 
-        # 注入关系信息
+        # Step 4: 注入关系信息
         if relationships:
             rel_texts = []
             for r in relationships:
@@ -66,12 +78,13 @@ class GraphBuilderService:
                     f"{r['source']} 与 {r['target']} 的关系：{r['type']}。{r.get('description', '')}"
                 )
             rel_episode = "以下是实体之间的关系：\n\n" + "\n".join(rel_texts)
-            self.client.graph.episodic.add(
-                graph_id=graph_id,
+            self.client.graph.add(
                 data=rel_episode,
-                data_type="text",
-                source_type="profile_relationships"
+                type="text",
+                graph_id=graph_id,
+                source_description="实体关系信息"
             )
+            logger.info(f"已注入 {len(relationships)} 个关系")
 
         logger.info(f"图谱构建完成: {graph_id}")
         return graph_id
