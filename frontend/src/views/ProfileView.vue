@@ -54,7 +54,7 @@
         <DecisionCard v-for="d in decisions" :key="d.decision_id" :decision="d" @explore="openExplore(d)" />
       </section>
 
-      <div v-if="exploreTarget" class="overlay" @click.self="exploreTarget = null">
+      <div v-if="exploreTarget" class="overlay" @mousedown.self="exploreTarget = null">
         <div class="explore-modal">
           <h2>{{ $t('decision.exploreTitle') }}</h2>
           <p class="scenario-text">{{ exploreTarget.scenario }}</p>
@@ -62,8 +62,8 @@
             <div v-for="(b, idx) in exploreTarget.branches" :key="idx"
                  class="branch-option" :class="{ selected: selectedBranch === idx, actual: b.is_actual }"
                  @click="selectBranch(idx)">
-              <input v-if="!b.is_actual" v-model="b.label"
-                     class="branch-input" />
+              <input v-if="!b.is_actual && selectedBranch === idx" v-model="b.label"
+                     class="branch-input" @click.stop />
               <span v-else>{{ b.label }}</span>
               <span v-if="b.is_actual" class="small-tag">{{ $t('decision.actualLabel') }}</span>
             </div>
